@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Munsell-Test</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/elementui.css">
+</head>
+
+<body>
+
+    <div id="app">
+        <section v-for="(container, index) in containers" :key="index" :class="'hue-container list-group container-' + (index + 1)">
+            <draggable v-model="containers[index]" 
+                      animation="300"
+                      handle=".handle"
+                      :group="{ name: 'hue-boxes', pull: false, put: false }" 
+                      :tag="'div'">
+                <transition-group>
+                    <div v-for="box in container" 
+                        :key="box.position"
+                        :data-position="box.position" 
+                        :class="[{ 'circle': true, 'handle': box.style === '' }, 'mr-' + box.class]"
+                        :style="box.style">
+                    </div>
+                </transition-group>
+            </draggable>
+          </section>
+    </div>
+
+    <script src="js/vue.min.js" type="text/javascript"></script>
+    <script src="js/axios.min.js" type="text/javascript"></script>
+    <script src="js/httpVueLoader.js" type="text/javascript"></script>
+    <script src="js/elementui.js" type="text/javascript"></script>
+    <script src="js/Sortable.min.js"></script>
+    <script src="js/vuedraggable.umd.min.js"></script>
+    <script>
+        let vm = new Vue({
+            data() {
+                return {
+                    containers: [],
+                    loading: true,
+                }
+            },
+            components: {
+               'draggable': window['vuedraggable']
+            },
+            created() {
+
+            },
+            computed: {
+
+            },
+            methods: {
+                handleInit() {
+                    axios.get('data/main.json')
+                        .then(response => {
+                            this.containers = response.data;
+                        })
+                        .catch(error => {
+                            console.error('Error loading main.json:', error);
+                        })
+                        .finally(() => {
+                            this.loading = false;
+                        });
+                }
+            },
+            mounted() {
+                this.handleInit();
+            },
+            el: "#app"
+        })
+
+    </script>
+</body>
+
+</html>
