@@ -19,6 +19,7 @@
                         <el-button type="success" @click="handleStart">開始</el-button>
                         <el-button type="info" @click="handleInit">重置</el-button>
                         <el-button type="primary" @click="handleShuffle">打亂</el-button>
+                        <el-button type="success" @click="handleResult">結果</el-button>
                     </el-col>
                 </el-row>
             </div>
@@ -40,6 +41,24 @@
                 </draggable>
              </section>    
           </el-card>
+
+          <el-divider></el-divider>
+
+          <el-card class="box-card" v-if="isShowResult">
+            <section v-for="(container, index) in resultContainers" :key="index" :class="'hue-container list-group container-' + (index + 1)">
+                <draggable v-model="resultContainers[index]" 
+                            :sort="false">
+                    <transition-group>
+                        <div v-for="box in container" 
+                            :key="box.position"
+                            :data-position="box.position" 
+                            :class="[{ 'circle': true, 'handle': box.style === '', 'diff' : box.isdiff}, 'mr-' + box.class]"
+                            :style="box.style">
+                        </div>
+                    </transition-group>
+                </draggable>
+             </section>   
+          </el-card>
     </div>
 
     <script src="js/vue.min.js" type="text/javascript"></script>
@@ -52,7 +71,9 @@
         let vm = new Vue({
             data() {
                 return {
-                    containers: []
+                    containers: [],
+                    isShowResult : false,
+                    resultContainers: []
                 }
             },
             components: {
@@ -69,6 +90,7 @@
                     axios.get('data/main.json')
                         .then(response => {
                             this.containers = response.data;
+                            this.resultContainers =  Object.assign({}, this.containers);
                         })
                         .catch(error => {
                             console.error('Error loading main.json:', error);
@@ -79,6 +101,28 @@
                 },
                 handleStart(){
              
+                },
+                handleResult(){
+                    let _self = this;
+                    
+                    _self.isShowResult = true;
+
+                    let newResultContainers = [];
+
+                    for (let i = 0; i < Object.keys(_self.resultContainers).length; i++) {
+                        var container = _self.compareArrays(_self.resultContainers[i], _self.containers[i]);
+                        newResultContainers.push(container);
+                    }
+
+                    Vue.set(_self, 'resultContainers', newResultContainers);   
+                },
+                compareArrays(arr1, arr2) {
+                    for (let i = 0; i < arr1.length; i++) {
+                        if (arr1[i].position !== arr2[i].position) {
+                            arr1[i].isdiff = true;
+                        }
+                    }
+                    return arr1;
                 },
                 handleShuffle(){
                     let _self = this;
