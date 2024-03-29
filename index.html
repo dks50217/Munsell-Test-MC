@@ -12,22 +12,34 @@
 <body>
 
     <div id="app">
-        <section v-for="(container, index) in containers" :key="index" :class="'hue-container list-group container-' + (index + 1)">
-            <draggable v-model="containers[index]" 
-                      animation="300"
-                      handle=".handle"
-                      :group="{ name: 'hue-boxes', pull: false, put: false }" 
-                      :tag="'div'">
-                <transition-group>
-                    <div v-for="box in container" 
-                        :key="box.position"
-                        :data-position="box.position" 
-                        :class="[{ 'circle': true, 'handle': box.style === '' }, 'mr-' + box.class]"
-                        :style="box.style">
-                    </div>
-                </transition-group>
-            </draggable>
-          </section>
+        <el-card class="box-card">
+            <div slot="header" class="clearfix">
+                <el-row :gutter="20">
+                    <el-col :span="6" :offset="6">
+                        <el-button type="success" @click="handleInit">重置</el-button>
+                        <el-button type="primary" @click="handleShuffle">打亂</el-button>
+                    </el-col>
+                </el-row>
+            </div>
+            <section v-for="(container, index) in containers" :key="index" :class="'hue-container list-group container-' + (index + 1)">
+                <draggable v-model="containers[index]" 
+                            animation="300"
+                            draggable=".handle"
+                            :sort="checkSort"
+                            handle=".handle"
+                            :group="{ name: 'hue-boxes', pull: false, put: false }" 
+                            :tag="'div'">
+                    <transition-group>
+                        <div v-for="box in container" 
+                            :key="box.position"
+                            :data-position="box.position" 
+                            :class="[{ 'circle': true, 'handle': box.style === '' }, 'mr-' + box.class]"
+                            :style="box.style">
+                        </div>
+                    </transition-group>
+                </draggable>
+             </section>    
+          </el-card>
     </div>
 
     <script src="js/vue.min.js" type="text/javascript"></script>
@@ -40,8 +52,7 @@
         let vm = new Vue({
             data() {
                 return {
-                    containers: [],
-                    loading: true,
+                    containers: []
                 }
             },
             components: {
@@ -63,8 +74,50 @@
                             console.error('Error loading main.json:', error);
                         })
                         .finally(() => {
-                            this.loading = false;
+                            console.log('done');
                         });
+                },
+                checkSort(evt){
+                    
+                    console.log(evt)
+                    return true;
+                },
+                handleShuffle(){
+                    let _self = this;
+
+                    let newContainers = [];
+
+                    _self.containers.forEach(function(container){
+                        container = _self.randomizeArrayWith(container);
+                        newContainers.push(container);
+                    })
+
+                    Vue.set(this, 'containers', newContainers);   
+                },
+                randomizeArrayWith(arr){
+                   let emptyStyleArray = arr.filter(item => item.style == "");
+                   let nonEmptyStyleArray = arr.filter(item => item.style !== "");
+
+                   emptyStyleArray.sort(() => Math.random() - 0.5);
+
+                   const resultArray = [
+                    nonEmptyStyleArray[0],
+                    ...emptyStyleArray,
+                    nonEmptyStyleArray[1]
+                   ];
+
+                   return resultArray;
+                },
+                shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                },
+                shuffleArrays(...arrays) {
+                    for (let i = 0; i < arrays.length; i++) {
+                        arrays[i] = this.shuffleArray(arrays[i]);
+                    }
                 }
             },
             mounted() {
